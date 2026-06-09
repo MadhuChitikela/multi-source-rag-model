@@ -1,3 +1,13 @@
+---
+title: Multisource Rag
+emoji: 🧠
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Multi-Source Finance & E-Commerce RAG System
 
 A production-grade, multi-source Retrieval-Augmented Generation (RAG) system. This application ingests, structures, chunks, and indexes data across **five distinct domains** into a unified Pinecone serverless index, then serves it via a FastAPI backend and a lightweight, responsive light-mode frontend web app.
