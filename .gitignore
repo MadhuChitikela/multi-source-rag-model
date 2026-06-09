@@ -1,0 +1,21 @@
+# Environment files
+.env
+
+# Large datasets
+data/
+
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# System logs and task states
+.system_generated/
+*.log
+
+# Virtual environments
+venv/
+.venv/
+env/

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi‑Source RAG | Financial & E‑Commerce AI Assistant</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-base: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --border-color: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            
+            /* Namespace Colors (Optimized for light mode contrast) */
+            --color-products: #047857; /* Emerald-700 */
+            --color-stocks: #0369a1;   /* Sky-700 */
+            --color-deals: #b45309;    /* Amber-700 */
+            --color-documents: #6d28d9;/* Violet-700 */
+            --color-news: #be123c;     /* Rose-700 */
+            
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2.5rem 1.5rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Styling */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text h1 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .logo-text p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: -0.1rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #f0fdf4;
+            border: 1px solid #dcfce7;
+            color: #15803d;
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #16a34a;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        /* Control Card */
+        .controls-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .filter-section-title {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Namespace Grid checkboxes */
+        .namespace-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .namespace-label {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .namespace-label:hover {
+            border-color: var(--border-hover);
+            background: #f1f5f9;
+        }
+
+        .namespace-content {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .namespace-label input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .ns-badge {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .namespace-label[data-ns="products"] .ns-badge { background-color: var(--color-products); }
+        .namespace-label[data-ns="stocks"] .ns-badge { background-color: var(--color-stocks); }
+        .namespace-label[data-ns="deals"] .ns-badge { background-color: var(--color-deals); }
+        .namespace-label[data-ns="documents"] .ns-badge { background-color: var(--color-documents); }
+        .namespace-label[data-ns="news"] .ns-badge { background-color: var(--color-news); }
+
+        .checkbox-custom {
+            width: 1.1rem;
+            height: 1.1rem;
+            border: 2px solid var(--text-muted);
+            border-radius: 0.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        /* Active styles when selected */
+        .namespace-label.selected[data-ns="products"] {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.04);
+            color: var(--color-products);
+        }
+        .namespace-label.selected[data-ns="products"] .checkbox-custom {
+            border-color: var(--color-products);
+            background-color: var(--color-products);
+        }
+
+        .namespace-label.selected[data-ns="stocks"] {
+            border-color: rgba(14, 116, 144, 0.4);
+            background: rgba(14, 116, 144, 0.04);
+            color: var(--color-stocks);
+        }
+        .namespace-label.selected[data-ns="stocks"] .checkbox-custom {
+            border-color: var(--color-stocks);
+            background-color: var(--color-stocks);
+        }
+
+        .namespace-label.selected[data-ns="deals"] {
+            border-color: rgba(180, 83, 9, 0.4);
+            background: rgba(180, 83, 9, 0.04);
+            color: var(--color-deals);
+        }
+        .namespace-label.selected[data-ns="deals"] .checkbox-custom {
+            border-color: var(--color-deals);
+            background-color: var(--color-deals);
+        }
+
+        .namespace-label.selected[data-ns="documents"] {
+            border-color: rgba(109, 40, 217, 0.4);
+            background: rgba(109, 40, 217, 0.04);
+            color: var(--color-documents);
+        }
+        .namespace-label.selected[data-ns="documents"] .checkbox-custom {
+            border-color: var(--color-documents);
+            background-color: var(--color-documents);
+        }
+
+        .namespace-label.selected[data-ns="news"] {
+            border-color: rgba(190, 18, 60, 0.4);
+            background: rgba(190, 18, 60, 0.04);
+            color: var(--color-news);
+        }
+        .namespace-label.selected[data-ns="news"] .checkbox-custom {
+            border-color: var(--color-news);
+            background-color: var(--color-news);
+        }
+
+        /* Search input bar */
+        .query-area {
+            display: flex;
+            gap: 0.75rem;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 0.35rem;
+            transition: all 0.2s;
+        }
+
+        .query-area:focus-within {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .search-icon-wrapper {
+            display: flex;
+            align-items: center;
+            padding-left: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0.75rem 0.25rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            font-family: var(--font-body);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+
+        button.search-btn {
+            background: #4f46e5;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0 1.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            font-family: var(--font-display);
+            color: white;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        button.search-btn:hover {
+            background: #4338ca;
+        }
+
+        button.search-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Results Layout Grid */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 1.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease-out;
+        }
+
+        .results-grid.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .answer-panel, .sources-panel {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .panel-header i {
+            color: #4f46e5;
+        }
+
+        /* Answer content formatting */
+        .answer-text {
+            line-height: 1.6;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+        }
+
+        .answer-text p {
+            margin-bottom: 0.75rem;
+        }
+
+        .answer-text ul, .answer-text ol {
+            margin-left: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .answer-text li {
+            margin-bottom: 0.35rem;
+        }
+
+        /* Clickable Citations styling */
+        .citation-badge {
+            background: #f1f5f9;
+            color: #4f46e5;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.25rem;
+            padding: 0.05rem 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0 0.1rem;
+            transition: all 0.15s ease;
+            display: inline-block;
+        }
+
+        .citation-badge:hover {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+            transform: translateY(-1px);
+        }
+
+        /* Source Card items */
+        .sources-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 580px;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+
+        .sources-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sources-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sources-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        .source-card {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--color-products);
+            transition: all 0.2s ease;
+        }
+
+        .source-card:hover {
+            border-color: var(--border-hover);
+            background: #f1f5f9;
+        }
+
+        .source-card[data-ns="products"] { border-left-color: var(--color-products); }
+        .source-card[data-ns="stocks"] { border-left-color: var(--color-stocks); }
+        .source-card[data-ns="deals"] { border-left-color: var(--color-deals); }
+        .source-card[data-ns="documents"] { border-left-color: var(--color-documents); }
+        .source-card[data-ns="news"] { border-left-color: var(--color-news); }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .source-index {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .source-ns-tag {
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.65rem;
+        }
+
+        .source-card[data-ns="products"] .source-ns-tag { background: #e6f4ea; color: var(--color-products); }
+        .source-card[data-ns="stocks"] .source-ns-tag { background: #e0f7fa; color: var(--color-stocks); }
+        .source-card[data-ns="deals"] .source-ns-tag { background: #fff3e0; color: var(--color-deals); }
+        .source-card[data-ns="documents"] .source-ns-tag { background: #f3e5f5; color: var(--color-documents); }
+        .source-card[data-ns="news"] .source-ns-tag { background: #ffebee; color: var(--color-news); }
+
+        .source-score {
+            font-weight: 600;
+            color: #16a34a;
+        }
+
+        /* Detail table inside sources */
+        .source-metadata-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+            margin-bottom: 0.5rem;
+            background: #ffffff;
+            border-radius: 0.35rem;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .source-metadata-table td {
+            padding: 0.25rem 0.5rem;
+            border-bottom: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .source-metadata-table td.meta-key {
+            color: var(--text-secondary);
+            font-weight: 600;
+            width: 30%;
+        }
+
+        .source-metadata-table td.meta-val {
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .source-text-block {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            background: #ffffff;
+            border-radius: 0.35rem;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            max-height: 110px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .source-text-block::-webkit-scrollbar {
+            width: 3px;
+        }
+        .source-text-block::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        /* Flash animation for citation targeting */
+        @keyframes flash-highlight {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+            50% { transform: scale(1.02); box-shadow: 0 0 10px rgba(79, 70, 229, 0.2); border-color: #4f46e5; }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+
+        .source-card.highlighted {
+            animation: flash-highlight 1.2s ease-out;
+        }
+
+        /* Loading Skeleton Shimmer state (Light Mode) */
+        .shimmer-container {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .shimmer-panel {
+            background: #ffffff;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .shimmer-block {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0.35rem;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .shimmer-title {
+            width: 35%;
+            height: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .shimmer-line {
+            width: 100%;
+            height: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .shimmer-line.half {
+            width: 60%;
+        }
+
+        .shimmer-card {
+            height: 100px;
+            margin-bottom: 0.75rem;
+            border-radius: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .results-grid, .shimmer-container {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 1.5rem 1rem;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon">
+                <i data-lucide="brain-circuit" style="color: white; width: 1.25rem; height: 1.25rem;"></i>
+            </div>
+            <div class="logo-text">
+                <h1>Multi‑Source RAG</h1>
+                <p>Financial & E‑Commerce Knowledge Assistant</p>
+            </div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            <span>Active: 10,625 vectors</span>
+        </div>
+    </header>
+
+    <!-- Controls Panel -->
+    <div class="controls-card">
+        <div class="filter-section-title">
+            <i data-lucide="layers" style="width: 0.9rem; height: 0.9rem; color: #4f46e5;"></i>
+            <span>Select Target Namespaces</span>
+        </div>
+        <div class="namespace-grid" id="namespace-grid">
+            <!-- Populated via Javascript -->
+        </div>
+        
+        <div class="query-area">
+            <div class="search-icon-wrapper">
+                <i data-lucide="search" style="width: 1.1rem; height: 1.1rem;"></i>
+            </div>
+            <input type="text" id="question" placeholder="Ask anything... e.g., 'What are the top electronics products on Amazon?'" autocomplete="off" />
+            <button id="search-btn" class="search-btn">
+                <span>Run Query</span>
+                <i data-lucide="arrow-right" style="width: 1rem; height: 1rem;"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Shimmer Loader (Hidden initially) -->
+    <div id="shimmer-loader" class="shimmer-container" style="display: none;">
+        <div class="shimmer-panel">
+            <div class="shimmer-block shimmer-title"></div>
+            <div class="shimmer-block shimmer-line"></div>
+            <div class="shimmer-block shimmer-line"></div>
+            <div class="shimmer-block shimmer-line"></div>
+            <div class="shimmer-block shimmer-line half"></div>
+        </div>
+        <div class="shimmer-panel">
+            <div class="shimmer-block shimmer-title" style="width: 30%;"></div>
+            <div class="shimmer-block shimmer-card"></div>
+            <div class="shimmer-block shimmer-card"></div>
+        </div>
+    </div>
+
+    <!-- Results Panel (Hidden initially) -->
+    <div id="results" class="results-grid">
+        <div class="answer-panel">
+            <div class="panel-header">
+                <i data-lucide="sparkles"></i>
+                <span>Generated Synthesis</span>
+            </div>
+            <div class="answer-text" id="answer-text"></div>
+        </div>
+        <div class="sources-panel">
+            <div class="panel-header">
+                <i data-lucide="database"></i>
+                <span>Retrieved Context Sources</span>
+            </div>
+            <div class="sources-list" id="sources-list">
+                <!-- Populated via Javascript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize icons
+    lucide.createIcons();
+
+    const namespaces = [
+        { id: "products", label: "Products", icon: "shopping-bag" },
+        { id: "stocks", label: "Stocks (SPY)", icon: "line-chart" },
+        { id: "deals", label: "Merchant Deals", icon: "tag" },
+        { id: "documents", label: "Manuals & POs", icon: "file-text" },
+        { id: "news", label: "Financial News", icon: "newspaper" }
+    ];
+    
+    let selectedNamespaces = namespaces.map(ns => ns.id); // Default select all
+
+    function renderNamespaceFilters() {
+        const grid = document.getElementById('namespace-grid');
+        grid.innerHTML = '';
+        
+        namespaces.forEach(ns => {
+            const label = document.createElement('label');
+            label.className = `namespace-label ${selectedNamespaces.includes(ns.id) ? 'selected' : ''}`;
+            label.setAttribute('data-ns', ns.id);
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = ns.id;
+            checkbox.checked = selectedNamespaces.includes(ns.id);
+            
+            checkbox.addEventListener('change', (e) => {
+                if (checkbox.checked) {
+                    if (!selectedNamespaces.includes(ns.id)) selectedNamespaces.push(ns.id);
+                    label.classList.add('selected');
+                } else {
+                    selectedNamespaces = selectedNamespaces.filter(id => id !== ns.id);
+                    label.classList.remove('selected');
+                }
+            });
+            
+            const content = document.createElement('span');
+            content.className = 'namespace-content';
+            
+            const badge = document.createElement('span');
+            badge.className = 'ns-badge';
+            
+            const icon = document.createElement('i');
+            icon.setAttribute('data-lucide', ns.icon);
+            icon.style.width = '0.9rem';
+            icon.style.height = '0.9rem';
+            icon.style.color = `var(--color-${ns.id})`;
+            
+            const text = document.createTextNode(ns.label);
+            
+            const customCheckbox = document.createElement('span');
+            customCheckbox.className = 'checkbox-custom';
+            
+            content.appendChild(badge);
+            content.appendChild(icon);
+            content.appendChild(text);
+            
+            label.appendChild(checkbox);
+            label.appendChild(content);
+            label.appendChild(customCheckbox);
+            
+            grid.appendChild(label);
+        });
+        
+        lucide.createIcons();
+    }
+
+    // Process answer text to highlight citations and parse basic bolding
+    function formatAnswer(text) {
+        if (!text) return "";
+        
+        // Escape HTML to prevent injection
+        let escaped = escapeHtml(text);
+        
+        // Match bracketed citations e.g. [1], [2], [10]
+        escaped = escaped.replace(/\[([1-8])\]/g, (match, idx) => {
+            return `<span class="citation-badge" onclick="highlightSource(${idx})">[Source ${idx}]</span>`;
+        });
+        
+        // Replace **text** with bold tags
+        escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Replace list elements or markdown items
+        escaped = escaped.replace(/^\s*[-*]\s+(.*?)$/gm, '<li>$1</li>');
+        escaped = escaped.replace(/(<li>.*?<\/li>)/gs, '<ul>$1</ul>');
+        
+        // Fix multiple double nested lists
+        escaped = escaped.replace(/<\/ul>\s*<ul>/g, '');
+        
+        return escaped;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // Scroll to and highlight a specific source card
+    function highlightSource(index) {
+        const card = document.getElementById(`source-card-${index}`);
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.classList.remove('highlighted');
+            void card.offsetWidth;
+            card.classList.add('highlighted');
+        }
+    }
+
+    async function performQuery() {
+        const question = document.getElementById('question').value.trim();
+        if (!question) return;
+
+        if (selectedNamespaces.length === 0) {
+            alert("Please select at least one source namespace to query.");
+            return;
+        }
+
+        const searchBtn = document.getElementById('search-btn');
+        const shimmer = document.getElementById('shimmer-loader');
+        const results = document.getElementById('results');
+        
+        searchBtn.disabled = true;
+        shimmer.style.display = 'grid';
+        results.classList.remove('visible');
+        
+        try {
+            const response = await fetch('/api/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: question,
+                    namespaces: selectedNamespaces
+                })
+            });
+            
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Server error occurred');
+
+            // Render Answer
+            document.getElementById('answer-text').innerHTML = formatAnswer(data.answer);
+            
+            // Render Sources
+            const listContainer = document.getElementById('sources-list');
+            listContainer.innerHTML = '';
+            
+            if (data.sources.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem; font-size: 0.9rem;">
+                        No source documents retrieved.
+                    </div>
+                `;
+            } else {
+                data.sources.forEach((src, idx) => {
+                    const cardIndex = idx + 1;
+                    const card = document.createElement('div');
+                    card.className = 'source-card';
+                    card.setAttribute('data-ns', src.namespace);
+                    card.id = `source-card-${cardIndex}`;
+                    
+                    let metaRows = "";
+                    for (const [key, val] of Object.entries(src.metadata)) {
+                        if (key !== "text" && val !== null && val !== undefined) {
+                            metaRows += `
+                                <tr>
+                                    <td class="meta-key">${key}</td>
+                                    <td class="meta-val">${val}</td>
+                                </tr>
+                            `;
+                        }
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="source-header">
+                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                <span class="source-index">${cardIndex}</span>
+                                <span class="source-ns-tag">${src.namespace}</span>
+                            </div>
+                            <span class="source-score"><i data-lucide="trending-up" style="width: 0.75rem; height: 0.75rem; display: inline-block; vertical-align: middle; margin-right: 0.15rem;"></i>${src.score.toFixed(3)}</span>
+                        </div>
+                        <table class="source-metadata-table">
+                            ${metaRows ? metaRows : '<tr><td colspan="2" class="meta-val">No additional metadata</td></tr>'}
+                        </table>
+                        <div class="source-text-block">${escapeHtml(src.text)}</div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+                
+                lucide.createIcons();
+            }
+            
+            shimmer.style.display = 'none';
+            results.classList.add('visible');
+            
+        } catch (err) {
+            alert('Query Error: ' + err.message);
+            shimmer.style.display = 'none';
+        } finally {
+            searchBtn.disabled = false;
+        }
+    }
+
+    document.getElementById('search-btn').addEventListener('click', performQuery);
+    document.getElementById('question').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performQuery();
+    });
+
+    renderNamespaceFilters();
+</script>
+</body>
+</html>
