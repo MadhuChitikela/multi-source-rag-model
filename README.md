@@ -28,7 +28,7 @@ graph TD
     PC -.->|3. Embeds Query| Emb[Integrated llama-text-embed-v2]
     PC -->|4. Retrieves Context Chunks| API
     API -->|5. Compiles Context + Citations| Prompt[Prompt Compiler]
-    Prompt -->|6. Call LLM| Groq[Groq API llama-3.3-70b]
+    Prompt -->|6. Call LLM| Groq[Groq API openai/gpt-oss-120b]
     Groq -->|7. Answer Synthesis| API
     API -->|8. Serve JSON response| User
 ```
@@ -56,7 +56,7 @@ The system segments different datasets into separate namespaces to prevent conte
 * **Pinecone Integrated Inference**: Eliminates local vector generation by letting Pinecone's serverless engine embed queries and texts directly using the `llama-text-embed-v2` model.
 * **Interactive Citations**: The frontend automatically parses LLM bracketed citations (e.g. `[Source 1]`) and turns them into clickable badges. Clicking a citation badge smoothly scrolls to and highlights the corresponding document card in the source list.
 * **Tabular Property Grids**: Displays structured metadata (dates, scores, URLs, stock volume, prices) in neat tables within the source cards.
-* **Robust Model Fallbacks**: Automatically falls back between `llama-3.3-70b-versatile`, `llama-3.3-70b-specdec`, and `llama3-70b-8192` to guarantee high availability on the Groq API.
+* **Robust Model Fallbacks**: Automatically falls back between `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, and `qwen/qwen3.8-27b` to guarantee high availability on the Groq API.
 
 ---
 

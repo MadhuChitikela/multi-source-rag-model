@@ -160,9 +160,9 @@ Question: {req.question}
 Answer:"""
 
     # 4. Generate completion via Groq (with fallback models if needed)
-    models_to_try = ["llama-3.3-70b-versatile", "llama-3.3-70b-specdec", "llama3-70b-8192"]
+    models_to_try = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b"]
     completion = None
-    last_error = None
+    errors = []
 
     for model_name in models_to_try:
         try:
@@ -174,10 +174,10 @@ Answer:"""
             break  # Success, exit loop
         except Exception as e:
             print(f"[WARNING] Model {model_name} failed: {e}")
-            last_error = e
+            errors.append(f"{model_name}: {e}")
 
     if not completion:
-        raise HTTPException(status_code=500, detail=f"LLM completion failed: {last_error}")
+        raise HTTPException(status_code=500, detail=f"LLM completion failed: {'; '.join(errors)}")
 
     answer = completion.choices[0].message.content
 

@@ -32,7 +32,7 @@ TOP_K_PER_NAMESPACE = 3
 
 # Initialize ChatGroq LLM
 llm = ChatGroq(
-    model="llama-3.3-70b-specdec",
+    model="openai/gpt-oss-120b",
     temperature=0,
     groq_api_key=GROQ_API_KEY
 )
