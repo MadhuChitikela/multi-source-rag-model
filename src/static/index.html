@@ -319,6 +319,77 @@
             cursor: not-allowed;
         }
 
+        /* Quick Prompt Buttons */
+        .quick-questions-wrapper {
+            margin-top: 1rem;
+            padding-top: 0.85rem;
+            border-top: 1px dashed var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+
+        .quick-questions-label {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.74rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .quick-questions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+        }
+
+        .quick-btn {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 9999px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.78rem;
+            font-family: var(--font-body);
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+
+        .quick-btn:hover {
+            background: #eef2ff;
+            border-color: #c7d2fe;
+            color: #3730a3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.08);
+        }
+
+        .quick-btn:active {
+            transform: translateY(0);
+        }
+
+        .quick-btn .chip-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .quick-btn[data-type="products"] .chip-dot { background-color: var(--color-products); }
+        .quick-btn[data-type="stocks"] .chip-dot { background-color: var(--color-stocks); }
+        .quick-btn[data-type="deals"] .chip-dot { background-color: var(--color-deals); }
+        .quick-btn[data-type="documents"] .chip-dot { background-color: var(--color-documents); }
+        .quick-btn[data-type="news"] .chip-dot { background-color: var(--color-news); }
+        .quick-btn[data-type="multi"] .chip-dot { background: linear-gradient(135deg, #4f46e5, #ec4899); }
+
         /* Results Layout Grid */
         .results-grid {
             display: grid;
@@ -647,6 +718,40 @@
                 <i data-lucide="arrow-right" style="width: 1rem; height: 1rem;"></i>
             </button>
         </div>
+
+        <!-- Quick Question Insert Buttons -->
+        <div class="quick-questions-wrapper">
+            <div class="quick-questions-label">
+                <i data-lucide="sparkles" style="width: 0.85rem; height: 0.85rem; color: #6366f1;"></i>
+                <span>Quick Prompt Suggestions:</span>
+            </div>
+            <div class="quick-questions-list">
+                <button type="button" class="quick-btn" data-type="products" onclick="setQuickQuestion('What are some of the top-rated products on Amazon and what are their prices?', ['products'])">
+                    <span class="chip-dot"></span>
+                    <span>Top Amazon Products &amp; Prices</span>
+                </button>
+                <button type="button" class="quick-btn" data-type="stocks" onclick="setQuickQuestion('What was the highest closing price of SPY and on what dates did it record peak volume?', ['stocks'])">
+                    <span class="chip-dot"></span>
+                    <span>SPY Peak Price &amp; Trading Volume</span>
+                </button>
+                <button type="button" class="quick-btn" data-type="deals" onclick="setQuickQuestion('Which merchant brands and shopping domains offer promotional discount deals?', ['deals'])">
+                    <span class="chip-dot"></span>
+                    <span>Merchant Deals &amp; Domains</span>
+                </button>
+                <button type="button" class="quick-btn" data-type="documents" onclick="setQuickQuestion('What companies and order details are listed in the Northwind purchase orders?', ['documents'])">
+                    <span class="chip-dot"></span>
+                    <span>Northwind Purchase Orders</span>
+                </button>
+                <button type="button" class="quick-btn" data-type="news" onclick="setQuickQuestion('What are the major financial news stories and market headlines reported?', ['news'])">
+                    <span class="chip-dot"></span>
+                    <span>Latest Financial News</span>
+                </button>
+                <button type="button" class="quick-btn" data-type="multi" onclick="setQuickQuestion('Are any of the product brands in the catalog also listed with merchant deals or discount domains?', ['products', 'deals'])">
+                    <span class="chip-dot"></span>
+                    <span>Multi-Source: Products &amp; Deals</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Shimmer Loader (Hidden initially) -->
@@ -897,6 +1002,33 @@
     document.getElementById('question').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') performQuery();
     });
+
+    // Quick Question Insert & Execution Handler
+    function setQuickQuestion(text, requiredNamespaces) {
+        const input = document.getElementById('question');
+        input.value = text;
+        
+        // Update selected namespaces
+        selectedNamespaces = [...requiredNamespaces];
+        
+        // Update UI checkboxes
+        const grid = document.getElementById('namespace-grid');
+        const labels = grid.querySelectorAll('.namespace-label');
+        labels.forEach(lbl => {
+            const nsId = lbl.getAttribute('data-ns');
+            const chk = lbl.querySelector('input[type="checkbox"]');
+            if (selectedNamespaces.includes(nsId)) {
+                chk.checked = true;
+                lbl.classList.add('selected');
+            } else {
+                chk.checked = false;
+                lbl.classList.remove('selected');
+            }
+        });
+        
+        // Auto-run query immediately
+        performQuery();
+    }
 
     renderNamespaceFilters();
 </script>
